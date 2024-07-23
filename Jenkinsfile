@@ -55,8 +55,8 @@ pipeline{
                 script {
                     docker_image= docker.build("${DOCKERIMAGE}:V${BUILD_NUMBER}")
                     withDockerRegistry([url: '', credentialsId: 'dockerhub']) {
-                        docker_images.push('V${BUILD_NUMBER}')
-                        docker_images.push('latest')
+                        docker_image.push('V${BUILD_NUMBER}')
+                        docker_image.push('latest')
                         sh "docker rmi haleemo/netfilx:latest haleemo/netfilx:$BUILD_NUMBER"
 
                     }
