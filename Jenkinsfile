@@ -24,7 +24,7 @@ pipeline{
             steps{
                 withSonarQubeEnv('sonar-server') {
                     sh '''
-                        $SONAR_HOME/bin/sonar-tool -Dsonar.projectName=Netflix \
+                        $SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
                         -Dsonar.projectKey=Netflix
                     '''
                     
