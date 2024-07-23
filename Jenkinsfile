@@ -5,12 +5,11 @@ pipeline{
     tools {
         jdk "jdk17"
         nodejs "node"
-
+    }
     environment {
         SONAR_HOME = tool "sonar-tool"
-    }
-    }
-    }
+        }
+
     stages{
         stage("Clean workspace"){
             steps{
@@ -43,6 +42,6 @@ pipeline{
         //         cleanWs()
         //     }
         // }
-   
+    }
 
 }
