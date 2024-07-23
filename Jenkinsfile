@@ -63,7 +63,7 @@ pipeline{
                         dockerImage.push("V${env.BUILD_NUMBER}")
                         dockerImage.push('latest')
                         sh "trivy image haleemo/netfilx:latest > trivyimage.txt"
-                        sh "docker rmi haleemo/netfilx:latest haleemo/netfilx:${env.BUILD_NUMBER}"
+                        sh "docker rmi haleemo/netfilx:latest haleemo/netfilx:V${env.BUILD_NUMBER}"
                     }
                 }
             }
