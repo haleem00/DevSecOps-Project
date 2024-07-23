@@ -50,6 +50,11 @@ pipeline{
 
         //     }
         // }
+        stage("TRIVY"){
+            steps{
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
         stage("Build and push docker image"){
             steps{
                 script {
@@ -57,6 +62,7 @@ pipeline{
                     withDockerRegistry([url: '', credentialsId: 'dockerhub']) {
                         dockerImage.push("V${env.BUILD_NUMBER}")
                         dockerImage.push('latest')
+                        sh "trivy image haleemo/netfilx:latest > trivyimage.txt"
                         sh "docker rmi haleemo/netfilx:latest haleemo/netfilx:${env.BUILD_NUMBER}"
                     }
                 }
@@ -77,6 +83,7 @@ pipeline{
         //         }
         //     }
         // }
+         
     }
 
 }
