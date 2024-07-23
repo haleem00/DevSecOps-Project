@@ -1,7 +1,7 @@
 pipeline{
     agent{
         label "any"
-
+    }
     tools {
         jdk "jdk17"
         nodejs "node"
@@ -43,6 +43,6 @@ pipeline{
         //         cleanWs()
         //     }
         // }
-   }
+   
 
 }
