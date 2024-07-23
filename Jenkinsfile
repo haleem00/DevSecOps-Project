@@ -53,7 +53,7 @@ pipeline{
         stage("Build and push docker image"){
             steps{
                 script {
-                    docker_image= docker.build("DOCKERIMAGE:V${BUILD_NUMBER}")
+                    docker_image= docker.build("${DOCKERIMAGE}:V${BUILD_NUMBER}")
                     withDockerRegistry([url: '', credentialsId: 'dockerhub']) {
                         docker_images.push('V${BUILD_NUMBER}')
                         docker_images.push('latest')
