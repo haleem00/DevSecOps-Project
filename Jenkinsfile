@@ -53,12 +53,11 @@ pipeline{
         stage("Build and push docker image"){
             steps{
                 script {
-                    docker_image= docker.build("${DOCKERIMAGE}:V${BUILD_NUMBER}")
+                    dockerImage = docker.build("${DOCKERIMAGE}:V${env.BUILD_NUMBER}")
                     withDockerRegistry([url: '', credentialsId: 'dockerhub']) {
-                        docker_image.push('V${BUILD_NUMBER}')
-                        docker_image.push('latest')
-                        sh "docker rmi haleemo/netfilx:latest haleemo/netfilx:$BUILD_NUMBER"
-
+                        dockerImage.push("V${env.BUILD_NUMBER}")
+                        dockerImage.push('latest')
+                        sh "docker rmi haleemo/netfilx:latest haleemo/netfilx:${env.BUILD_NUMBER}"
                     }
                 }
             }
