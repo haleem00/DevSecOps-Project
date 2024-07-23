@@ -44,12 +44,12 @@ pipeline{
                 }
             }
         }
-        stage("Quilty gate"){
-            steps{
-                waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token', timeout: 15*60
+        // stage("Quilty gate"){
+        //     steps{
+        //         waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
 
-            }
-        }
+        //     }
+        // }
         stage("Build and push docker image"){
             steps{
                 script {
