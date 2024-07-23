@@ -47,11 +47,21 @@ pipeline{
                 waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
             }
         }
-        // stage("Clean workspace"){
-        //     steps{
-        //         cleanWs()
-        //     }
-        // }
+        stage("Build and push docker image"){
+            steps{
+                script {
+                    withDockerRegistry('', credentialsId: 'dockerhub') {
+
+                    sh "docker build --build-arg TMDB_V3_API_KEY=b16d8eed9624150739d555b64b2a569c -t netflix ."
+                    sh "docker tag netflix haleemo/netfilx:latest"
+                    sh "docker tag netflix haleemo/netfilx:$BUILD_NUMBER"
+                    SH "docker push haleemo/netfilx:latest"
+                    SH "docker push haleemo/netfilx:$BUILD_NUMBER"
+                    sh "docker rmi haleemo/netfilx:latest haleemo/netfilx:$BUILD_NUMBER"
+                    }
+                }
+            }
+        }
     }
 
 }
