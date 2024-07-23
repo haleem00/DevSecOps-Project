@@ -20,6 +20,17 @@ pipeline{
                 git branch: 'main', url: 'https://github.com/haleem00/DevSecOps-Project.git'
             }
         }
+        stage("Install Dependencies"){
+            steps{
+                sh 'npm install'
+            }
+        }
+        stage("OWASP FS SCAN"){
+            steps{
+                dependencyCheck additionalArguments: '--scan ./ --format XML --out dependency-check-report.xml', odcInstallation: 'dependency-check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
         stage("Sonerqube"){
             steps{
                 withSonarQubeEnv('sonar-server') {
