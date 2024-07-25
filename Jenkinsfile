@@ -9,6 +9,10 @@ pipeline{
         SONAR_HOME = tool "sonar-tool"
         DOCKERIMAGE = 'haleemo/netfilx'
         DOCKERPASS = "dockerhub"
+        ARGOCD_SERVER = 'http://3.85.146.238:31096'
+        ARGOCD_APPLICATION = 'netflix'
+        ARGOCD_PROJECT = 'default'
+        ARGOCD_TOKEN = credentials('argo-token')
         }
 
     stages{
@@ -84,7 +88,21 @@ pipeline{
         //         }
         //     }
         // }
-         
+         post {
+        success {
+            script {
+                def response = httpRequest(
+                    url: "${ARGOCD_SERVER}/api/v1/applications/${ARGOCD_APPLICATION}/sync",
+                    httpMode: 'POST',
+                    customHeaders: [[name: 'Authorization', value: "Bearer ${ARGOCD_TOKEN}"]],
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: '''{
+                        "project": "${ARGOCD_PROJECT}"
+                    }'''
+                )
+                echo "Argo CD Sync Response: ${response.content}"
+            }
+        }
     }
 
 }
