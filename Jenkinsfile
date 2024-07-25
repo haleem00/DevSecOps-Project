@@ -1,10 +1,11 @@
-pipeline{
+pipeline {
     agent any
-       
+
     tools {
         jdk "jdk17"
         nodejs "node"
     }
+    
     environment {
         SONAR_HOME = tool "sonar-tool"
         DOCKERIMAGE = 'haleemo/netfilx'
@@ -13,54 +14,59 @@ pipeline{
         ARGOCD_APPLICATION = 'netflix'
         ARGOCD_PROJECT = 'default'
         ARGOCD_TOKEN = credentials('argo-token')
-        }
+    }
 
-    stages{
-        stage("Clean workspace"){
-            steps{
+    stages {
+        stage("Clean workspace") {
+            steps {
                 cleanWs()
             }
         }
-        stage("Check from git"){
-            steps{
+        
+        stage("Check from git") {
+            steps {
                 git branch: 'main', url: 'https://github.com/haleem00/DevSecOps-Project.git'
             }
         }
-        stage("Install Dependencies"){
-            steps{
+        
+        stage("Install Dependencies") {
+            steps {
                 sh 'npm install'
             }
         }
-        stage("OWASP FS SCAN"){
-            steps{
+        
+        stage("OWASP FS SCAN") {
+            steps {
                 dependencyCheck additionalArguments: '--scan ./ --format XML --out dependency-check-report.xml', odcInstallation: 'dependency-check'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
-        stage("Sonerqube"){
-            steps{
+        
+        stage("SonarQube") {
+            steps {
                 withSonarQubeEnv('sonar-server') {
                     sh '''
                         $SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
                         -Dsonar.projectKey=Netflix
                     '''
-                    
                 }
             }
         }
-        // stage("Quilty gate"){
-        //     steps{
+        
+        // stage("Quality Gate") {
+        //     steps {
         //         waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
-
         //     }
         // }
-        stage("TRIVY fs scan"){
-            steps{
+        
+        stage("TRIVY FS Scan") {
+            steps {
                 sh "trivy fs . > trivyfs.txt"
             }
         }
-        stage("Build and push docker image"){
-            steps{
+        
+        stage("Build and Push Docker Image") {
+            steps {
                 script {
                     dockerImage = docker.build("${DOCKERIMAGE}:V${env.BUILD_NUMBER}")
                     withDockerRegistry([url: '', credentialsId: 'dockerhub']) {
@@ -73,23 +79,23 @@ pipeline{
             }
         }
         
-        // stage("Build and push docker image"){
-        //     steps{
+        // stage("Build and Push Docker Image") {
+        //     steps {
         //         script {
         //             withDockerRegistry('', credentialsId: 'dockerhub') {
-
-        //             sh "docker build --build-arg TMDB_V3_API_KEY=b16d8eed9624150739d555b64b2a569c -t netflix ."
-        //             sh "docker tag netflix haleemo/netfilx:latest"
-        //             sh "docker tag netflix haleemo/netfilx:$BUILD_NUMBER"
-        //             sh "docker push haleemo/netfilx:latest"
-        //             sh "docker push haleemo/netfilx:$BUILD_NUMBER"
-        //             sh "docker rmi haleemo/netfilx:latest haleemo/netfilx:$BUILD_NUMBER"
+        //                 sh "docker build --build-arg TMDB_V3_API_KEY=b16d8eed9624150739d555b64b2a569c -t netflix ."
+        //                 sh "docker tag netflix haleemo/netfilx:latest"
+        //                 sh "docker tag netflix haleemo/netfilx:$BUILD_NUMBER"
+        //                 sh "docker push haleemo/netfilx:latest"
+        //                 sh "docker push haleemo/netfilx:$BUILD_NUMBER"
+        //                 sh "docker rmi haleemo/netfilx:latest haleemo/netfilx:$BUILD_NUMBER"
         //             }
         //         }
         //     }
         // }
     }
-         post {
+    
+    post {
         success {
             script {
                 def response = httpRequest(
@@ -105,5 +111,4 @@ pipeline{
             }
         }
     }
-
 }
