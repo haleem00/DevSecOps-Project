@@ -5,7 +5,7 @@ pipeline {
         jdk "jdk17"
         nodejs "node"
     }
-    
+
     environment {
         SONAR_HOME = tool "sonar-tool"
         DOCKERIMAGE = 'haleemo/netfilx'
@@ -13,7 +13,6 @@ pipeline {
         ARGOCD_SERVER = 'http://3.85.146.238:31096'
         ARGOCD_APPLICATION = 'netflix'
         ARGOCD_PROJECT = 'default'
-        ARGOCD_TOKEN = credentials('argo-token')
     }
 
     stages {
@@ -22,26 +21,26 @@ pipeline {
                 cleanWs()
             }
         }
-        
+
         stage("Check from git") {
             steps {
                 git branch: 'main', url: 'https://github.com/haleem00/DevSecOps-Project.git'
             }
         }
-        
+
         stage("Install Dependencies") {
             steps {
                 sh 'npm install'
             }
         }
-        
+
         stage("OWASP FS SCAN") {
             steps {
                 dependencyCheck additionalArguments: '--scan ./ --format XML --out dependency-check-report.xml', odcInstallation: 'dependency-check'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
-        
+
         stage("SonarQube") {
             steps {
                 withSonarQubeEnv('sonar-server') {
@@ -52,19 +51,19 @@ pipeline {
                 }
             }
         }
-        
+
         // stage("Quality Gate") {
         //     steps {
         //         waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
         //     }
         // }
-        
+
         stage("TRIVY FS Scan") {
             steps {
                 sh "trivy fs . > trivyfs.txt"
             }
         }
-        
+
         stage("Build and Push Docker Image") {
             steps {
                 script {
@@ -78,7 +77,7 @@ pipeline {
                 }
             }
         }
-        
+
         // stage("Build and Push Docker Image") {
         //     steps {
         //         script {
@@ -94,20 +93,22 @@ pipeline {
         //     }
         // }
     }
-    
+
     post {
         success {
             script {
-                def response = httpRequest(
-                    url: "${ARGOCD_SERVER}/api/v1/applications/${ARGOCD_APPLICATION}/sync",
-                    httpMode: 'POST',
-                    customHeaders: [[name: 'Authorization', value: "Bearer ${ARGOCD_TOKEN}"]],
-                    contentType: 'APPLICATION_JSON',
-                    requestBody: '''{
-                        "project": "${ARGOCD_PROJECT}"
-                    }'''
-                )
-                echo "Argo CD Sync Response: ${response.content}"
+                withCredentials([string(credentialsId: 'argo-token', variable: 'ARGOCD_TOKEN')]) {
+                    def response = httpRequest(
+                        url: "${ARGOCD_SERVER}/api/v1/applications/${ARGOCD_APPLICATION}/sync",
+                        httpMode: 'POST',
+                        customHeaders: [[name: 'Authorization', value: "Bearer ${ARGOCD_TOKEN}"]],
+                        contentType: 'APPLICATION_JSON',
+                        requestBody: '''{
+                            "project": "${ARGOCD_PROJECT}"
+                        }'''
+                    )
+                    echo "Argo CD Sync Response: ${response.content}"
+                }
             }
         }
     }
